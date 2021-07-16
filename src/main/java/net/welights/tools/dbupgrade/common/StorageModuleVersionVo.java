@@ -2,27 +2,30 @@ package net.welights.tools.dbupgrade.common;
 
 import java.util.List;
 
-public class StorageModuleVersionVo {
+/**
+ * @author welights
+ */
+public class StorageModuleVersionVo extends StorageModuleVo {
 
-    private String VersionName;
-    private String VersionPath;
+    private String versionName;
+    private String versionPath;
     private List<StorageModuleVersionScriptVo> ddlList;
     private List<StorageModuleVersionScriptVo> dmlList;
 
     public String getVersionName() {
-        return VersionName;
+        return versionName;
     }
 
     public void setVersionName(String versionName) {
-        VersionName = versionName;
+        this.versionName = versionName;
     }
 
     public String getVersionPath() {
-        return VersionPath;
+        return versionPath;
     }
 
     public void setVersionPath(String versionPath) {
-        VersionPath = versionPath;
+        this.versionPath = versionPath;
     }
 
     public List<StorageModuleVersionScriptVo> getDdlList() {

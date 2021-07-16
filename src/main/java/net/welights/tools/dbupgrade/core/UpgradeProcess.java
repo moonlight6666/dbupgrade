@@ -102,15 +102,15 @@ public class UpgradeProcess {
                 StorageModuleVo storageModuleVo = storageModuleVoList.get(Integer.parseInt(numberIndex));
                 System.out.println();
                 System.out.println("开始升级 " + storageModuleVo.getModuleName() + " ....................");
-                List<ScriptVo> scriptVoList = new ArrayList<>();
-                String status = upgradeModule(storageModuleVo);
+                List<StorageModuleVersionScriptVo> scriptVoList = new ArrayList<>();
+                String status = upgradeModule(storageModuleVo, scriptVoList);
                 if (status.equals(Constants.STATUS_SUCCEED)) {
                     succeedList.add(storageModuleVo.getModuleName());
                 }
 
                 System.out.println("升级结果清单:");
-                for (ScriptVo scriptVo : scriptVoList) {
-                    ScriptVo resultVo = getSqlStatus(scriptVo.getModuleName(), scriptVo.getModuleVersion(), scriptVo.getScriptName(), scriptVo.getType());
+                for (StorageModuleVersionScriptVo scriptVo : scriptVoList) {
+                    ScriptVo resultVo = getSqlStatus(scriptVo.getModuleName(), scriptVo.getVersionName(), scriptVo.getScriptName(), scriptVo.getType());
                     System.out.println("        * 状态: " + resultVo.getStatus() + ", 版本: " + resultVo.getModuleVersion() + ", 类型: " + resultVo.getType() + ", 脚本名称: " + resultVo.getScriptName());
                     if (StringUtils.isNotBlank(resultVo.getMessage())) {
                         System.out.println("        * 信息: " + resultVo.getMessage());
@@ -126,7 +126,7 @@ public class UpgradeProcess {
 
     }
 
-    private static String upgradeModule(StorageModuleVo storageModuleVo) throws Exception {
+    private static String upgradeModule(StorageModuleVo storageModuleVo, List<StorageModuleVersionScriptVo> scriptVoList) throws Exception {
         boolean moduleUpgradeStatus = true;
         try {
             List<StorageModuleVersionVo> versionList = storageModuleVo.getVersionList();
@@ -172,41 +172,43 @@ public class UpgradeProcess {
 
                     List<StorageModuleVersionScriptVo> ddlList = storageModuleVersionVo.getDdlList();
                     if (ddlList != null && ddlList.size() > 0) {
-                        for (StorageModuleVersionScriptVo dml : ddlList) {
+                        for (StorageModuleVersionScriptVo ddl : ddlList) {
                             try {
                                 // 避免执行成功的sql重复执行
-                                String sqlStatus = getSqlStatus(storageModuleVo.getModuleName(), nextVersion, dml.getScriptName(), "ddl").getStatus();
+                                String sqlStatus = getSqlStatus(storageModuleVo.getModuleName(), nextVersion, ddl.getScriptName(), "ddl").getStatus();
                                 if (!StringUtils.equals(sqlStatus, Constants.STATUS_SUCCEED)) {
-                                    String sqlExecStatus = executeSql(scriptExecutor, dml);
-                                    updateSqlStatus(storageModuleVo.getModuleName(), nextVersion, dml.getScriptName(), "ddl", sqlExecStatus, "");
+                                    String sqlExecStatus = executeSql(scriptExecutor, ddl);
+                                    updateSqlStatus(storageModuleVo.getModuleName(), nextVersion, ddl.getScriptName(), "ddl", sqlExecStatus, "");
                                 }
                             } catch (Exception e) {
                                 moduleUpgradeStatus = false;
-                                updateSqlStatus(storageModuleVo.getModuleName(), nextVersion, dml.getScriptName(), "ddl", Constants.STATUS_FAILED, e.getMessage());
+                                updateSqlStatus(storageModuleVo.getModuleName(), nextVersion, ddl.getScriptName(), "ddl", Constants.STATUS_FAILED, e.getMessage());
                             } finally {
                                 System.out.println("");
                                 System.out.println("");
                             }
+                            scriptVoList.add(ddl);
                         }
                     }
 
                     List<StorageModuleVersionScriptVo> dmlList = storageModuleVersionVo.getDdlList();
                     if (ddlList != null && dmlList.size() > 0) {
-                        for (StorageModuleVersionScriptVo ddl : dmlList) {
+                        for (StorageModuleVersionScriptVo dml : dmlList) {
                             try {
                                 //避免执行成功的sql重复执行
-                                String sqlStatus = getSqlStatus(storageModuleVo.getModuleName(), nextVersion, ddl.getScriptName(), "dml").getStatus();
+                                String sqlStatus = getSqlStatus(storageModuleVo.getModuleName(), nextVersion, dml.getScriptName(), "dml").getStatus();
                                 if (!StringUtils.equals(sqlStatus, Constants.STATUS_SUCCEED)) {
-                                    String sqlExecStatus = executeSql(scriptExecutor, ddl);
-                                    updateSqlStatus(storageModuleVo.getModuleName(), nextVersion, ddl.getScriptName(), "dml", sqlExecStatus, "");
+                                    String sqlExecStatus = executeSql(scriptExecutor, dml);
+                                    updateSqlStatus(storageModuleVo.getModuleName(), nextVersion, dml.getScriptName(), "dml", sqlExecStatus, "");
                                 }
                             } catch (Exception e) {
                                 moduleUpgradeStatus = false;
-                                updateSqlStatus(storageModuleVo.getModuleName(), nextVersion, ddl.getScriptName(), "dml", Constants.STATUS_FAILED, e.getMessage());
+                                updateSqlStatus(storageModuleVo.getModuleName(), nextVersion, dml.getScriptName(), "dml", Constants.STATUS_FAILED, e.getMessage());
                             } finally {
                                 System.out.println("");
                                 System.out.println("");
                             }
+                            scriptVoList.add(dml);
                         }
                     }
 
@@ -353,6 +355,7 @@ public class UpgradeProcess {
             if (moduleVersions != null && moduleVersions.length > 0) {
                 for (File moduleVersionDir : moduleVersions) {
                     StorageModuleVersionVo storageModuleVersionVo = new StorageModuleVersionVo();
+                    storageModuleVersionVo.setModuleName(moduleName);
                     storageModuleVersionVo.setVersionName(moduleVersionDir.getName());
                     storageModuleVersionVo.setVersionPath(moduleVersionDir.getPath());
                     versionList.add(storageModuleVersionVo);
@@ -375,8 +378,11 @@ public class UpgradeProcess {
                     File[] ddlFileList = type.listFiles();
                     for (File ddl : ddlFileList) {
                         StorageModuleVersionScriptVo storageModuleVersionScriptVo = new StorageModuleVersionScriptVo();
+                        storageModuleVersionScriptVo.setModuleName(moduleName);
+                        storageModuleVersionScriptVo.setVersionName(versionVo.getVersionName());
                         storageModuleVersionScriptVo.setScriptName(ddl.getName());
                         storageModuleVersionScriptVo.setScriptPath(ddl.getPath());
+                        storageModuleVersionScriptVo.setType("ddl");
                         ddlList.add(storageModuleVersionScriptVo);
                     }
                 }
@@ -385,8 +391,11 @@ public class UpgradeProcess {
                     File[] dmlFileList = type.listFiles();
                     for (File dml : dmlFileList) {
                         StorageModuleVersionScriptVo storageModuleVersionScriptVo = new StorageModuleVersionScriptVo();
+                        storageModuleVersionScriptVo.setModuleName(moduleName);
+                        storageModuleVersionScriptVo.setVersionName(versionVo.getVersionName());
                         storageModuleVersionScriptVo.setScriptName(dml.getName());
                         storageModuleVersionScriptVo.setScriptPath(dml.getPath());
+                        storageModuleVersionScriptVo.setType("dml");
                         dmlList.add(storageModuleVersionScriptVo);
                     }
                 }

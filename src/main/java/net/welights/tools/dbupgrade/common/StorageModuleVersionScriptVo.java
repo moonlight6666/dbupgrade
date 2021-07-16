@@ -3,23 +3,32 @@ package net.welights.tools.dbupgrade.common;
 /**
  * @author welights
  */
-public class StorageModuleVersionScriptVo {
-    private String ScriptName;
-    private String ScriptPath;
+public class StorageModuleVersionScriptVo extends StorageModuleVersionVo {
+    private String scriptName;
+    private String scriptPath;
+    private String type;
 
     public String getScriptName() {
-        return ScriptName;
+        return scriptName;
     }
 
     public void setScriptName(String scriptName) {
-        ScriptName = scriptName;
+        this.scriptName = scriptName;
     }
 
     public String getScriptPath() {
-        return ScriptPath;
+        return scriptPath;
     }
 
     public void setScriptPath(String scriptPath) {
-        ScriptPath = scriptPath;
+        this.scriptPath = scriptPath;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }
