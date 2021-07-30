@@ -1,6 +1,10 @@
 package net.welights.tools.dbupgrade.util;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PushbackInputStream;
+import java.io.Reader;
 
 public class UnicodeReader extends Reader {
 

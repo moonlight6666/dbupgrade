@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author welights
+ */
 public class DatabaseUpgrade {
 
     @Parameter
@@ -35,7 +38,7 @@ public class DatabaseUpgrade {
     private boolean help;
 
     @DynamicParameter(names = "-D", description = "Dynamic parameters go here")
-    private Map<String, String> dynamicParams = new HashMap<String, String>();
+    private Map<String, String> dynamicParams = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
         DatabaseUpgrade cmd = new DatabaseUpgrade();
@@ -56,7 +59,7 @@ public class DatabaseUpgrade {
             return;
         }
 
-        new UpgradeProcess(this).upgrade();
+        new UpgradeProcess(this).processUpgrade();
     }
 
     public List<String> getParameters() {

@@ -6,6 +6,7 @@ package net.welights.tools.dbupgrade.core;
  * @Auther welights
  * @Date 2019/10/10 16:58
  **/
+
 import net.welights.tools.dbupgrade.exception.RuntimeSqlException;
 
 import java.io.BufferedReader;
